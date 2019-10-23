@@ -12,9 +12,17 @@
   * 在使用者一鍵發送簡訊後，端口產生一組用手機為帳號與一組隨機的密碼   
   * 存至mysql後，得到回傳值並回送至手機  
     
-### SMS接收 權限設置
+### SMS接收 權限設置(permission)
+將以下放置 AndroidManifest.xml
 ```
 <uses-permission android:name="android.permission.RECEIVE_SMS"/>
 <uses-permission android:name="android.permission.READ_SMS"/>
 <uses-permission android:name="android.permission.SEND_SMS"/>
+```
+### 主程式架構
+實現持續監聽SMS訊息  
+首先 判斷是否使用者同意SMS權限設置
+要求權限同意申請  
+```
+ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.READ_SMS},REQ_CODE_CONTACT);  
 ```
