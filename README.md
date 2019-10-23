@@ -26,3 +26,31 @@
 ```
 ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.READ_SMS},REQ_CODE_CONTACT);  
 ```
+同意後 SMS獲取 放置ListVIew 方便觀看
+```
+//讀取所有簡訊
+Uri uri = Uri.parse("content://sms/");
+ContentResolver resolver = getContentResolver();
+Cursor cursor = resolver.query(uri, new String[]{"_id", "address", "body", "date", "type"}, null, null, null);
+if (cursor != null && cursor.getCount() > 0) {
+  int _id;
+  String address;
+  String body;
+  String date;
+  int type;
+  while (cursor.moveToNext()) {
+    Map<String, Object> map = new HashMap<String, Object>();
+    _id = cursor.getInt(0);
+    address = cursor.getString(1);
+    body = cursor.getString(2);
+    date = cursor.getString(3);
+    type = cursor.getInt(4);
+    map.put("names", body);
+
+    Log.i("Myinfo", "_id=" + _id + " address=" + address + " body=" + body + " date=" + date + " type=" + type);
+    data.add(map);
+    //通知介面卡發生改變
+    sa.notifyDataSetChanged();
+  }
+}
+```
