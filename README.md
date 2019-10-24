@@ -12,7 +12,7 @@
   * 在使用者一鍵發送簡訊後，端口產生一組用手機為帳號與一組隨機的密碼   
   * 存至mysql後，得到回傳值並回送至手機  
     
-### SMS接收 權限設置(permission)
+### SMS接收 發送 權限設置(permission)
 將以下放置 AndroidManifest.xml
 ```
 <uses-permission android:name="android.permission.RECEIVE_SMS"/>
@@ -84,6 +84,21 @@ runnable = new Runnable( ) {
 handler.postDelayed(runnable,1000); 
 ```
 
+發送SMS信息
+```
+try{
+  Intent i = new Intent(Intent.ACTION_VIEW);
+  i.setData(Uri.parse("smsto:"));
+  i.setType("vnd.android-dir/mms-sms");
+  i.putExtra("address", new String("send-phone"));
+  i.putExtra("sms_body","send-message");
+  startActivity(Intent.createChooser(i, "Send sms via:"));
+}
+  catch(Exception e){
+  Toast.makeText(MainActivity.this, "SMS Failed to Send, Please try again", Toast.LENGTH_SHORT).show();
+}
+```
+
 綜合以上需求 即可每秒監測SMS訊息是否有獲取到新的使用者發送的註冊SMS
 如果收到新的SMS註冊，即可當場發送POST至SERVER，註冊新的使用者，返回註冊資訊
 ```
@@ -91,12 +106,14 @@ public class MainActivity extends AppCompatActivity {
 
     private ListView mListView;
     private SimpleAdapter sa;
-    private Button mButton;
+    private Button mButton,mButton2;
     private List<Map<String, Object>> data;
     public static final int REQ_CODE_CONTACT = 1;
 
     private Handler handler = new Handler( );
     private Runnable runnable;
+
+    private int status = 0 ;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,7 +129,17 @@ public class MainActivity extends AppCompatActivity {
         mButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                status = 1;
                 checkSMSPermission();
+            }
+        });
+
+        mButton2 = (Button) findViewById(R.id.btn2);
+        mButton2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                status = 2;
+                checkSMSPermission2();
             }
         });
     }
@@ -152,6 +179,18 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void checkSMSPermission2(){
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS)
+                != PackageManager.PERMISSION_GRANTED) {
+            //未獲取到讀取簡訊許可權
+
+            //向系統申請許可權
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.SEND_SMS}, REQ_CODE_CONTACT);
+        } else {
+            sendSMSMessage();
+        }
+    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -159,7 +198,12 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == REQ_CODE_CONTACT && grantResults.length > 0
                 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             //獲取到讀取簡訊許可權
-            checkSMSPermission();
+            if(status == 1){
+                checkSMSPermission();
+            }else if(status == 2){
+                checkSMSPermission2();
+            }
+
         } else {
             Toast.makeText(this, "未獲取到簡訊許可權", Toast.LENGTH_SHORT).show();
         }
@@ -193,6 +237,24 @@ public class MainActivity extends AppCompatActivity {
                 //通知介面卡發生改變
                 sa.notifyDataSetChanged();
             }
+        }
+    }
+
+    @SuppressLint("IntentReset")
+    private void sendSMSMessage(){
+//        SmsManager smsManager = SmsManager.getDefault();
+//        smsManager.sendTextMessage("1111111111",null,"test sms",null,null);
+
+        try{
+            Intent i = new Intent(Intent.ACTION_VIEW);
+            i.setData(Uri.parse("smsto:"));
+            i.setType("vnd.android-dir/mms-sms");
+            i.putExtra("address", new String("0925157589"));
+            i.putExtra("sms_body","test sms");
+            startActivity(Intent.createChooser(i, "Send sms via:"));
+        }
+        catch(Exception e){
+            Toast.makeText(MainActivity.this, "SMS Failed to Send, Please try again", Toast.LENGTH_SHORT).show();
         }
     }
 }
